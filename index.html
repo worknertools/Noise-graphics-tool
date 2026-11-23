@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <title>T-28</title>
+    
+
+  </head>
+    
+  <body>
+  <!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xerox Style Graphic Generator Pro</title>
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --panel: #000000;
+            --accent: #ffffff;
+            --text: #aaaaaa;
+            --canvas-bg: #9BD89E; /* 动态背景色变量 */
+        }
+
+    body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+        background-color: var(--bg);
+        color: var(--text);
+        margin: 0;
+        display: -webkit-flex;
+        display: flex;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    /* 左侧控制栏 */
+    .sidebar {
+        width: 320px;
+        background-color: var(--panel);
+        border-right: 1px solid #222;
+        padding: 24px 30px;
+        display: -webkit-flex;
+        display: flex;
+        -webkit-flex-direction: column;
+        flex-direction: column;
+        overflow-x: hidden;
+        overflow-y: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        z-index: 10;
+        -webkit-flex-shrink: 0;
+        flex-shrink: 0;
+    }
+    .sidebar::-webkit-scrollbar { display: none; }
+    /* 控件间距：用外边距代替 flex 的 gap（旧版 Safari 不支持 gap） */
+    .sidebar > * + * { margin-top: 20px; }
+
+    /* 面板顶部的图像预览框 */
+    .preview-box {
+        position: relative;
+        width: 100%;
+        height: 150px;
+        background-color: #222;
+        background-repeat: no-repeat;
+        background-position: center center;
+        -webkit-background-size: cover;
+        background-size: cover;          /* 图片铺满整个预览框 */
+        border: 1px solid #333;
+        box-sizing: border-box;
+        border-radius: 0;
+        overflow: hidden;
+        -webkit-flex-shrink: 0;
+        flex-shrink: 0;
+        display: -webkit-flex;
+        display: flex;
+        -webkit-align-items: center;
+        align-items: center;
+        -webkit-justify-content: center;
+        justify-content: center;
+    }
+    .preview-text {
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+        color: #666;
+    }
+
+    .control-group { display: -webkit-flex; display: flex; -webkit-flex-direction: column; flex-direction: column; }
+    .control-group > * + * { margin-top: 10px; }
+    
+    .label-row {
+        display: -webkit-flex;
+        display: flex;
+        -webkit-justify-content: space-between;
+        justify-content: space-between;
+        -webkit-align-items: center;
+        align-items: center;
+    }
+
+    label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; }
+    
+    .val-num { 
+        font-size: 13px; 
+        color: #ffffff; 
+        font-family: 'JetBrains Mono', Menlo, Consolas, monospace; 
+        font-weight: bold;
+    }
+
+    .upload-container {
+        position: relative;
+        background: #fff;
+        color: #000;
+        height: 40px;
+        display: -webkit-flex;
+        display: flex;
+        -webkit-align-items: center;
+        align-items: center;
+        -webkit-justify-content: center;
+        justify-content: center;
+        font-weight: bold;
+        cursor: pointer;
+        text-transform: uppercase;
+        font-size: 12px;
+        -webkit-transition: 0.2s;
+        transition: 0.2s;
+        padding: 0 10px;
+        overflow: hidden;
+        border-radius: 0;
+    }
+    .upload-container:hover { background: #ccc; }
+    
+    .upload-text {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis; 
+        padding-right: 25px;
+        padding-left: 5px;
+        -webkit-flex: 1;
+        flex: 1;
+        text-align: center;
+        font-weight: 400; 
+        max-width: 200px; 
+    }
+
+    .clear-btn {
+        position: absolute;
+        right: 10px;
+        color: #666;
+        font-size: 16px;
+        cursor: pointer;
+        padding: 5px;
+        display: none; 
+        line-height: 1;
+    }
+    .clear-btn:hover { color: #000; }
+
+    .colors-container {
+        display: -webkit-flex;
+        display: flex;
+    }
+    .colors-container > .color-item + .color-item { margin-left: 15px; }
+    .color-item {
+        -webkit-flex: 1;
+        flex: 1;
+        display: -webkit-flex;
+        display: flex;
+        -webkit-flex-direction: column;
+        flex-direction: column;
+        min-width: 0;
+    }
+    .color-item > * + * { margin-top: 8px; }
+    .color-row { display: -webkit-flex; display: flex; }
+
+    select {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        border-radius: 0;
+        background-color: #222;
+        color: #fff;
+        border: 1px solid #444;
+        padding: 10px 28px 10px 10px;
+        outline: none;
+        cursor: pointer;
+        font-size: 12px;
+        font-family: inherit;
+        /* 自绘下拉箭头（去掉系统圆角外观后需要自己补上） */
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M0 0l5 6 5-6z' fill='%23ffffff'/></svg>");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+    }
+    select option { background: #222; color: #fff; }
+
+    input[type="color"] {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        border-radius: 0;
+        width: 34px;
+        height: 34px;
+        border: 1px solid #444;
+        background: transparent;
+        cursor: pointer;
+        padding: 0;
+        margin: 0;
+        -webkit-flex-shrink: 0;
+        flex-shrink: 0;
+        box-sizing: border-box;
+    }
+    input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+    input[type="color"]::-webkit-color-swatch { border: none; border-radius: 0; }
+    input[type="color"]::-moz-color-swatch { border: none; border-radius: 0; }
+
+    /* 色值文本：与色彩UI边框同色并无缝贴合 */
+    .color-input-hex {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        border-radius: 0;
+        background: transparent;
+        border: 1px solid #444;
+        border-left: none;
+        color: #ffffff; 
+        font-family: 'JetBrains Mono', Menlo, Consolas, monospace;
+        font-size: 12px; 
+        font-weight: bold; 
+        padding: 0 5px;
+        margin: 0;
+        width: 100%;
+        height: 34px;
+        outline: none;
+        text-align: center;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
+    /* 滑块：轨道与滑块都显式设置，Chrome / Safari 外观一致；滑块为直角方块 */
+    input[type="range"] {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 12px;
+        margin: 5px 0 -5px;     /* 抵消较高的点击区域，整体占位与原来的 2px 轨道一致 */
+        padding: 0;
+        background: transparent;
+        outline: none;
+        border-radius: 0;
+    }
+    input[type="range"]::-webkit-slider-runnable-track {
+        height: 2px;
+        background: #333;
+        border: none;
+        border-radius: 0;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 12px;
+        height: 12px;
+        margin-top: -5px;
+        background: #fff;
+        border: none;
+        cursor: pointer;
+        border-radius: 0;
+    }
+    input[type="range"]::-moz-range-track { height: 2px; background: #333; border: none; border-radius: 0; }
+    input[type="range"]::-moz-range-thumb {
+        width: 12px;
+        height: 12px;
+        background: #fff;
+        border: none;
+        cursor: pointer;
+        border-radius: 0;
+    }
+
+    .btn {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        border-radius: 0;
+        font-family: inherit;
+        background: #fff;
+        color: #000;
+        border: none;
+        padding: 12px;
+        font-weight: bold;
+        cursor: pointer;
+        text-transform: uppercase;
+        font-size: 12px;
+        -webkit-transition: 0.2s;
+        transition: 0.2s;
+    }
+    .btn:hover { background: #ccc; }
+    .btn-outline { background: transparent; color: #fff; border: 1px solid #444; font-size: 10px; padding: 12px 5px; }
+    
+    .download-group {
+        display: -webkit-flex;
+        display: flex;
+        -webkit-flex-direction: column;
+        flex-direction: column;
+        margin-bottom: 8px;
+    }
+    .download-group > * + * { margin-top: 8px; }
+
+    .download-row {
+        display: -webkit-flex;
+        display: flex;
+    }
+    .download-row > * + * { margin-left: 8px; }
+
+    .sidebar-footer {
+        margin-top: auto;
+        padding-top: 24px;
+        text-align: center;
+        font-size: 9px;
+        color: #444;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    .main {
+        -webkit-flex: 1;
+        flex: 1;
+        background-color: var(--canvas-bg); /* 使用变量控制背景 */
+        position: relative;
+        overflow: hidden;
+        display: -webkit-flex;
+        display: flex;
+        -webkit-align-items: center;
+        align-items: center;
+        -webkit-justify-content: center;
+        justify-content: center;
+        min-width: 0;
+    }
+
+    .canvas-container {
+        width: 100%;
+        height: 100%;
+        display: -webkit-flex;
+        display: flex;
+        -webkit-align-items: center;
+        align-items: center;
+        -webkit-justify-content: center;
+        justify-content: center;
+    }
+
+    canvas {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+        image-rendering: pixelated; 
+        display: block;
+        width: 100%;
+        height: 100%;
+        -o-object-fit: contain;
+        object-fit: contain;
+    }
+</style>
+</head>
+<body>
+<div class="sidebar">
+    <!-- 图像预览框 -->
+    <div class="preview-box" id="previewBox">
+        <span class="preview-text" id="previewText">Image Preview</span>
+    </div>
+
+    <div class="control-group">
+        <div class="upload-container" id="uploadBox" onclick="document.getElementById('imgInput').click()">
+            <span id="uploadText" class="upload-text">上传图像 (Upload)</span>
+            <span id="clearImg" class="clear-btn" title="清除图片">✕</span>
+        </div>
+        <input type="file" id="imgInput" accept="image/*" style="display:none">
+    </div>
+
+    <div class="control-group">
+        <div class="colors-container">
+            <div class="color-item">
+                <label>图形主色</label>
+                <div class="color-row">
+                    <input type="color" id="colorPaper" value="#000000">
+                    <input type="text" id="colorPaperText" class="color-input-hex" value="#000000" maxlength="7" spellcheck="false">
+                </div>
+            </div>
+            <div class="color-item">
+                <label>画布背景</label>
+                <div class="color-row">
+                    <input type="color" id="colorBg" value="#9BD89E">
+                    <input type="text" id="colorBgText" class="color-input-hex" value="#9BD89E" maxlength="7" spellcheck="false">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="control-group">
+        <label>风格模式 (Style Mode)</label>
+        <select id="algoMode">
+            <option value="dither">高质感抖动 (Dither)</option>
+            <option value="classic">经典噪点 (Grain)</option>
+            <option value="bitmapped">几何点阵 (Bayer Matrix)</option>
+        </select>
+    </div>
+
+    <div class="control-group">
+        <div class="label-row">
+            <label>图形阈值 (Threshold)</label>
+            <span class="val-num" id="val-threshold">128</span>
+        </div>
+        <input type="range" id="threshold" min="0" max="255" value="128">
+    </div>
+
+    <div class="control-group">
+        <div class="label-row">
+            <label>网格/纹理强度 (Density)</label>
+            <span class="val-num" id="val-grain">80</span>
+        </div>
+        <input type="range" id="grain" min="0" max="100" value="80">
+    </div>
+
+    <div class="control-group">
+        <div class="label-row">
+            <label>分层/对比度 (Contrast)</label>
+            <span class="val-num" id="val-contrast">2.2</span>
+        </div>
+        <input type="range" id="contrast" min="1" max="5" step="0.1" value="2.2">
+    </div>
+
+    <div class="control-group">
+        <div class="label-row">
+            <label>缩放 (Scale)</label>
+            <span class="val-num" id="val-scale">0.8</span>
+        </div>
+        <input type="range" id="graphicScale" min="0.1" max="3.0" step="0.1" value="0.8">
+    </div>
+
+    <div class="control-group" style="margin-top: 24px;">
+        <label>导出 Export</label>
+        <div class="download-group">
+            <div class="download-row">
+                <button class="btn btn-outline" style="flex:1; -webkit-flex:1;" id="saveJpgBtn">JPG</button>
+                <button class="btn btn-outline" style="flex:1; -webkit-flex:1;" id="saveBtn">PNG</button>
+                <button class="btn btn-outline" style="flex:1; -webkit-flex:1;" id="saveSvgBtn">SVG</button>
+            </div>
+            <button class="btn" style="background: #333; color: #fff; border: 1px solid #444;" id="randomBtn">随机效果 ( Random )</button>
+        </div>
+    </div>
+
+    <div class="sidebar-footer">
+        2026 TYPE PLAY. ALL RIGHTS RESERVED.
+    </div>
+</div>
+<div class="main" id="mainArea">
+    <div class="canvas-container">
+        <canvas id="canvas"></canvas>
+    </div>
+</div>
+<script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const mainArea = document.getElementById('mainArea');
+    const fileInput = document.getElementById('imgInput');
+    const uploadText = document.getElementById('uploadText');
+    const clearImg = document.getElementById('clearImg');
+    const previewBox = document.getElementById('previewBox');
+    const previewText = document.getElementById('previewText');
+    
+    const colorPaper = document.getElementById('colorPaper');
+    const colorPaperText = document.getElementById('colorPaperText');
+    const colorBg = document.getElementById('colorBg');
+    const colorBgText = document.getElementById('colorBgText');
+    
+    let originalImg = null;
+    let renderPending = false;
+    let srcBgColor = { r: 255, g: 255, b: 255 };
+
+    const offscreenCanvas = document.createElement('canvas');
+    const offscreenCtx = offscreenCanvas.getContext('2d', { willReadFrequently: true });
+
+    const bayer4x4 = [[0,8,2,10],[12,4,14,6],[3,11,1,9],[15,7,13,5]];
+
+    function requestRender() {
+        if (renderPending) return;
+        renderPending = true;
+        requestAnimationFrame(() => {
+            render();
+            renderPending = false;
+        });
+    }
+
+    window.onresize = requestRender;
+
+    // 两位十六进制补零（不使用较新的 padStart，兼容旧版 Safari / Chrome）
+    function hex2(n) {
+        const h = Math.round(n).toString(16);
+        return h.length < 2 ? '0' + h : h;
+    }
+
+    document.getElementById('randomBtn').onclick = () => {
+        const hToHex = (h) => {
+            let l = 60, s = 80;
+            const f = n => {
+                const k = (n + h / 30) % 12;
+                const color = l / 100 - (s * Math.min(l, 100 - l) / 100) / 100 * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+                return hex2(255 * color);
+            };
+            return `#${f(0)}${f(8)}${f(4)}`.toUpperCase();
+        };
+        colorPaper.value = hToHex(Math.random() * 360);
+        colorBg.value = hToHex(Math.random() * 360);
+        colorPaperText.value = colorPaper.value;
+        colorBgText.value = colorBg.value;
+        document.documentElement.style.setProperty('--canvas-bg', colorBg.value);
+        requestRender();
+    };
+
+    colorPaper.oninput = () => { colorPaperText.value = colorPaper.value.toUpperCase(); requestRender(); };
+    colorBg.oninput = () => { colorBgText.value = colorBg.value.toUpperCase(); document.documentElement.style.setProperty('--canvas-bg', colorBg.value); requestRender(); };
+
+    // 规范化十六进制色值（支持粘贴/输入带或不带 #，失焦或回车时支持 3 位简写自动补全）
+    function normalizeHex(val, allowShort) {
+        const s = val.trim();
+        let m = s.match(/^#?([0-9a-fA-F]{6})$/);
+        if (m) return '#' + m[1].toUpperCase();
+        if (allowShort) {
+            m = s.match(/^#?([0-9a-fA-F]{3})$/);
+            if (m) {
+                const c = m[1].toUpperCase();
+                return '#' + c[0] + c[0] + c[1] + c[1] + c[2] + c[2];
+            }
+        }
+        return null;
+    }
+
+    function bindHexInput(textEl, colorEl, onValid) {
+        function applyHex(allowShort, revertIfInvalid) {
+            const hex = normalizeHex(textEl.value, allowShort);
+            if (hex) {
+                textEl.value = hex;
+                colorEl.value = hex.toLowerCase();
+                if (onValid) onValid(hex);
+                requestRender();
+            } else if (revertIfInvalid) {
+                textEl.value = colorEl.value.toUpperCase();
+            }
+        }
+        textEl.oninput = () => applyHex(false, false);
+        textEl.onchange = () => applyHex(true, true);
+        textEl.onblur = () => applyHex(true, true);
+        textEl.onpaste = (e) => {
+            const clip = e.clipboardData || window.clipboardData;
+            if (!clip) return;
+            const hex = normalizeHex(clip.getData('text'), true);
+            if (hex) {
+                e.preventDefault();
+                textEl.value = hex;
+                colorEl.value = hex.toLowerCase();
+                if (onValid) onValid(hex);
+                requestRender();
+            }
+        };
+    }
+
+    bindHexInput(colorPaperText, colorPaper);
+    bindHexInput(colorBgText, colorBg, (hex) => {
+        document.documentElement.style.setProperty('--canvas-bg', hex);
+    });
+
+    fileInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        uploadText.textContent = file.name;
+        clearImg.style.display = 'block';
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => { 
+                originalImg = img; 
+                offscreenCanvas.width = 50; offscreenCanvas.height = 50;
+                offscreenCtx.drawImage(img, 0, 0, 50, 50);
+                const corners = offscreenCtx.getImageData(0,0,50,50).data;
+                srcBgColor = { r: corners[0], g: corners[1], b: corners[2] };
+                // 面板顶部的预览框：图片铺满显示
+                previewBox.style.backgroundImage = 'url("' + event.target.result + '")';
+                previewText.style.display = 'none';
+                render(); 
+            };
+            img.onerror = () => { alert('图片解码失败，请确认格式是否正确（建议 PNG / JPG / WebP）'); };
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    };
+
+    clearImg.onclick = (e) => {
+        e.stopPropagation(); originalImg = null; fileInput.value = ""; uploadText.textContent = "上传图像 (Upload)"; clearImg.style.display = 'none';
+        previewBox.style.backgroundImage = '';
+        previewText.style.display = '';
+        render();
+    };
+
+    function hexToRgb(hex) {
+        const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+        return { r, g, b };
+    }
+
+    function applyXeroxEffect(tCtx, tw, th, isTransparent = false) {
+        const inkMain = hexToRgb(colorPaper.value); 
+        const bg = hexToRgb(colorBg.value);
+        const inkGray = { r: 120, g: 120, b: 120 }, inkOrange = { r: 210, g: 140, b: 70 }, inkDark = { r: 30, g: 30, b: 30 };
+
+        if (!isTransparent) { tCtx.fillStyle = colorBg.value; tCtx.fillRect(0, 0, tw, th); }
+        else { tCtx.clearRect(0, 0, tw, th); }
+
+        if (!originalImg) return;
+        
+        const previewW = mainArea.clientWidth;
+        const resScale = tw / previewW; 
+        const userScale = parseFloat(document.getElementById('graphicScale').value);
+        const baseScale = Math.min(tw / originalImg.width, th / originalImg.height); 
+        
+        const w = Math.floor(originalImg.width * baseScale * userScale / resScale);
+        const h = Math.floor(originalImg.height * baseScale * userScale / resScale);
+        if (!(w >= 1 && h >= 1)) return;   // 窗口过小或缩放过小时避免 0 尺寸报错
+        
+        offscreenCanvas.width = w; offscreenCanvas.height = h;
+        offscreenCtx.drawImage(originalImg, 0, 0, w, h);
+        const srcData = offscreenCtx.getImageData(0, 0, w, h).data;
+        const targetImgData = offscreenCtx.createImageData(w, h);
+        const data = targetImgData.data;
+        
+        const mode = document.getElementById('algoMode').value;
+        const thresh = parseInt(document.getElementById('threshold').value);
+        const intensity = parseInt(document.getElementById('grain').value);
+        const contrast = parseFloat(document.getElementById('contrast').value);
+        const grays = new Float32Array(w * h);
+        const mask = new Uint8Array(w * h);
+
+        for (let i = 0; i < w * h; i++) {
+            const sid = i * 4;
+            const diff = Math.abs(srcData[sid] - srcBgColor.r) + Math.abs(srcData[sid+1] - srcBgColor.g) + Math.abs(srcData[sid+2] - srcBgColor.b);
+            if (srcData[sid+3] > 10 && diff > 35) {
+                mask[i] = 1;
+                grays[i] = (( (0.299*srcData[sid] + 0.587*srcData[sid+1] + 0.114*srcData[sid+2])/255 - 0.5) * contrast + 0.5) * 255;
+            }
+        }
+        
+        for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+                const i = y * w + x; const idx = i * 4;
+                if (!mask[i]) { if(!isTransparent) { data[idx]=bg.r; data[idx+1]=bg.g; data[idx+2]=bg.b; data[idx+3]=255; } continue; }
+                let v = grays[i], r_out, g_out, b_out, a_out = 255;
+                if (mode === 'bitmapped') {
+                    const mVal = bayer4x4[y % 4][x % 4] * (255/16); const gThresh = (intensity / 100) * mVal;
+                    if (v > thresh + 50) { r_out = bg.r; g_out = bg.g; b_out = bg.b; if(isTransparent) a_out=0; }
+                    else if (v > thresh) { r_out = inkMain.r; g_out = inkMain.g; b_out = inkMain.b; }
+                    else if (v > thresh - 40) { if (v < gThresh + (thresh-40)) { r_out = inkGray.r; g_out = inkGray.g; b_out = inkGray.b; } else { r_out = inkMain.r; g_out = inkMain.g; b_out = inkMain.b; }}
+                    else if (v > thresh - 90) { if (v < gThresh + (thresh-90)) { r_out = inkOrange.r; g_out = inkOrange.g; b_out = inkOrange.b; } else { r_out = inkGray.r; g_out = inkGray.g; b_out = inkGray.b; }}
+                    else { r_out = inkDark.r; g_out = inkDark.g; b_out = inkDark.b; }
+                } else {
+                    let bit = (mode === 'dither') ? (v < thresh ? 1 : 0) : ((v + (Math.random()-0.5)*(intensity*2.5)) < thresh ? 1 : 0);
+                    if (mode === 'dither') {
+                        let err = (v - (bit?0:255)) * (intensity/100);
+                        const spread = (tx, ty, weight) => { if (tx>=0 && tx<w && ty>=0 && ty<h && mask[ty*w+tx]) grays[ty*w+tx] += err*weight; };
+                        spread(x+1, y, 7/16); spread(x-1, y+1, 3/16); spread(x, y+1, 5/16); spread(x+1, y+1, 1/16);
+                    }
+                    r_out = bit ? inkMain.r : bg.r; g_out = bit ? inkMain.g : bg.g; b_out = bit ? inkMain.b : bg.b;
+                    if (!bit && isTransparent) a_out = 0;
+                }
+                data[idx] = r_out; data[idx+1] = g_out; data[idx+2] = b_out; data[idx+3] = a_out;
+            }
+        }
+        offscreenCtx.putImageData(targetImgData, 0, 0);
+        tCtx.imageSmoothingEnabled = false;
+        tCtx.webkitImageSmoothingEnabled = false;   // 旧版 Safari / Chrome
+        const fw = w * resScale, fh = h * resScale;
+        tCtx.drawImage(offscreenCanvas, 0, 0, w, h, (tw - fw) / 2, (th - fh) / 2, fw, fh);
+    }
+
+    function render() {
+        document.getElementById('val-threshold').textContent = document.getElementById('threshold').value;
+        document.getElementById('val-grain').textContent = document.getElementById('grain').value;
+        document.getElementById('val-contrast').textContent = parseFloat(document.getElementById('contrast').value).toFixed(1);
+        document.getElementById('val-scale').textContent = parseFloat(document.getElementById('graphicScale').value).toFixed(1);
+        canvas.width = mainArea.clientWidth; canvas.height = mainArea.clientHeight;
+        // 关键点：渲染带背景的像素到画布，供浏览器右键复制识别
+        applyXeroxEffect(ctx, canvas.width, canvas.height, false); 
+    }
+
+    // ---------- 导出：兼容 Safari / Chrome（Mac 与 Windows） ----------
+    // 文件保存：链接需挂到页面上再点击（Safari 要求），并稍后再释放对象地址
+    function saveBlob(blob, name) {
+        if (window.navigator && window.navigator.msSaveOrOpenBlob) { window.navigator.msSaveOrOpenBlob(blob, name); return; }
+        const URLObj = window.URL || window.webkitURL;
+        const url = URLObj.createObjectURL(blob);
+        const link = document.createElement('a');
+        if (typeof link.download === 'undefined') { window.open(url, '_blank'); return; }
+        link.href = url;
+        link.download = name;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(function () { URLObj.revokeObjectURL(url); }, 4000);
+    }
+
+    // canvas 转文件：优先 toBlob（超大图不会生成巨大的 base64 字符串），不支持时退回 toDataURL
+    function canvasToBlob(cv, type, quality, cb) {
+        if (cv.toBlob) { cv.toBlob(cb, type, quality); return; }
+        const data = atob(cv.toDataURL(type, quality).split(',')[1]);
+        const arr = new Uint8Array(data.length);
+        for (let i = 0; i < data.length; i++) arr[i] = data.charCodeAt(i);
+        cb(new Blob([arr], { type: type }));
+    }
+
+    function downloadFile(format) {
+        if (!originalImg) return;
+        const screenW = canvas.width;
+        const screenH = canvas.height;
+        const screenRatio = screenW / screenH;
+        const a3Long = 4961;
+        const dw = screenRatio > 1 ? a3Long : Math.round(a3Long * screenRatio);
+        const dh = screenRatio > 1 ? Math.round(a3Long / screenRatio) : a3Long;
+
+        if (format === 'svg') {
+            const d = ctx.getImageData(0, 0, screenW, screenH).data;
+            const bgRgb = hexToRgb(colorBg.value); // 获取当前背景色的RGB值用于对比
+            let paths = {}; 
+            
+            for (let y = 0; y < screenH; y++) {
+                let rowStart = -1;
+                let lastColor = "";
+                for (let x = 0; x <= screenW; x++) {
+                    let currentColor = "";
+                    if (x < screenW) {
+                        const i = (y * screenW + x) * 4;
+                        // 逻辑：如果是背景色像素或全透明像素，则不记入路径 (currentColor 保持为空串)
+                        const isBg = d[i] === bgRgb.r && d[i+1] === bgRgb.g && d[i+2] === bgRgb.b;
+                        if (d[i + 3] > 0 && !isBg) {
+                            currentColor = `rgb(${d[i]},${d[i+1]},${d[i+2]})`;
+                        }
+                    }
+
+                    if (currentColor !== lastColor) {
+                        if (rowStart !== -1) {
+                            if (!paths[lastColor]) paths[lastColor] = "";
+                            paths[lastColor] += `M${rowStart},${y}h${x - rowStart}v1h${rowStart - x}z `;
+                        }
+                        if (currentColor !== "") { rowStart = x; } 
+                        else { rowStart = -1; }
+                        lastColor = currentColor;
+                    }
+                }
+            }
+            
+            let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${screenW} ${screenH}" width="${dw}" height="${dh}" shape-rendering="crispEdges">`;
+            // 此处去掉了背景矩形层，实现SVG无背景
+            for (let col in paths) {
+                svgContent += `<path d="${paths[col]}" fill="${col}"/>`;
+            }
+            svgContent += `</svg>`;
+            
+            saveBlob(new Blob([svgContent], {type: "image/svg+xml"}), 'xerox_art.svg');
+        } else {
+            const exportCanvas = document.createElement('canvas');
+            exportCanvas.width = dw; exportCanvas.height = dh;
+            // 修改点：PNG导出时 isTransparent 参数设为 true
+            const isTransparent = (format === 'png');
+            applyXeroxEffect(exportCanvas.getContext('2d'), dw, dh, isTransparent);
+            canvasToBlob(exportCanvas, format === 'png' ? 'image/png' : 'image/jpeg', 0.9, function (blob) {
+                saveBlob(blob, 'xerox_art.' + format);
+            });
+        }
+    }
+
+    Array.prototype.forEach.call(document.querySelectorAll('input:not(.color-input-hex):not([type="color"]), select'), function (el) { el.oninput = requestRender; });
+    document.getElementById('saveBtn').onclick = () => downloadFile('png');
+    document.getElementById('saveJpgBtn').onclick = () => downloadFile('jpg');
+    document.getElementById('saveSvgBtn').onclick = () => downloadFile('svg');
+    document.documentElement.style.setProperty('--canvas-bg', colorBg.value);
+    render();
+</script>
+</body>
+</html>
+    
+  </body>
+  
+</html>
